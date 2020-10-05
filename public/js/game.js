@@ -2,6 +2,7 @@ const config = {
   type: Phaser.AUTO,
   width: 800,
   height: 600,
+  parent: 'main-wrapper',
   physics: {
     default: 'arcade',
     arcade: {
@@ -61,6 +62,14 @@ function create() {
         otherPlayer.anims.play(player.animation, true);
       }
     });
+  });
+
+  this.socket.on('starLocation', (star) => {
+    addStar(self, star);
+  });
+
+  this.socket.on('scoreUpdate', (scores) => {
+    updateScore(self, scores);
   });
 
   this.socket.on('disconnect', (playerId) => {
@@ -134,21 +143,46 @@ function addPlayersAnimation(self) {
   });
 }
 
+function addStar(self, star) {
+  if (self.star) self.star.destroy();
+
+  self.star = self.physics.add.image(star.x, star.y, 'star');
+  self.star.points = star.points;
+  self.star.setTint(star.color);
+  self.physics.add.overlap(
+    self.player,
+    self.star,
+    () => {
+      self.socket.emit('starCollected', { points: self.star.points });
+    },
+    null,
+    self
+  );
+  self.physics.add.collider(self.star, self.platforms);
+}
+
 function handleKeyboardInput(self) {
   if (self.player) {
-    if (self.cursors.left.isDown) {
-      self.player.setVelocityX(-160);
-      self.player.anims.play('left', true);
-    } else if (self.cursors.right.isDown) {
-      self.player.setVelocityX(160);
-      self.player.anims.play('right', true);
-    } else {
+    if (self.cursors.down.isDown && !self.player.body.touching.down) {
+      self.player.setVelocityY(300);
       self.player.setVelocityX(0);
       self.player.anims.play('turn');
+    } else {
+      if (self.cursors.left.isDown) {
+        self.player.setVelocityX(-160);
+        self.player.anims.play('left', true);
+      } else if (self.cursors.right.isDown) {
+        self.player.setVelocityX(160);
+        self.player.anims.play('right', true);
+      } else {
+        self.player.setVelocityX(0);
+        self.player.anims.play('turn');
+      }
+      if (self.cursors.up.isDown && self.player.body.touching.down) {
+        self.player.setVelocityY(-330);
+      }
     }
-    if (self.cursors.up.isDown && self.player.body.touching.down) {
-      self.player.setVelocityY(-330);
-    }
+
     const x = self.player.x;
     const y = self.player.y;
     const animation = self.player.anims.currentAnim.key;
@@ -169,5 +203,32 @@ function handleKeyboardInput(self) {
       y: self.player.y,
       animation: self.player.anims.currentAnim.key,
     };
+  }
+}
+
+function updateScore(self, scores) {
+  const table = document.querySelector('.scoreboard tbody');
+  table.innerHTML = '';
+
+  for (const playerId in scores) {
+    const player = scores[playerId];
+
+    const row = document.createElement('tr');
+
+    const scoreTD = document.createElement('td');
+    const nameTD = document.createElement('td');
+
+    scoreTD.textContent = player.points;
+    nameTD.textContent = player.id;
+
+    if (self.socket.id === playerId) {
+      nameTD.className = 'currentPlayer';
+      scoreTD.className = 'currentPlayer';
+    }
+
+    row.append(scoreTD);
+    row.append(nameTD);
+
+    table.appendChild(row);
   }
 }
