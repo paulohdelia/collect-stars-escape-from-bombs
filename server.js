@@ -13,7 +13,16 @@ io.on('connection', (socket) => {
     score: 0,
     x: Math.round(Math.random() * 700) + 50,
     y: 450,
+    animation: 'turn',
   };
+
+  socket.emit('currentPlayers', players);
+
+  socket.on('playerMovement', ({ x, y, animation }) => {
+    players[socket.id].x = x;
+    players[socket.id].y = y;
+    players[socket.id].animation = animation;
+  });
 
   socket.on('disconnect', () => {
     console.log(`> Player disconnected: ${socket.id}`);
