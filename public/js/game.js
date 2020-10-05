@@ -33,13 +33,42 @@ function create() {
   const self = this;
 
   this.socket = io();
+  this.otherPlayers = this.physics.add.group();
 
   addScenario(this);
   addPlayersAnimation(this);
 
-  this.socket.on('currentPlayers', (players) => {
-    addPlayer(self, players[self.socket.id]);
-    console.log(players);
+  this.socket.on('currentPlayers', (currentPlayers) => {
+    for (const playerId in currentPlayers) {
+      const player = currentPlayers[playerId];
+
+      if (self.socket.id === player.id) {
+        addPlayer(self, player);
+      } else {
+        addOtherPlayer(self, player);
+      }
+    }
+  });
+
+  this.socket.on('newPlayer', (player) => {
+    addOtherPlayer(self, player);
+  });
+
+  this.socket.on('playerMoved', (player) => {
+    self.otherPlayers.getChildren().forEach((otherPlayer) => {
+      if (player.id === otherPlayer.id) {
+        otherPlayer.setPosition(player.x, player.y);
+        otherPlayer.anims.play(player.animation, true);
+      }
+    });
+  });
+
+  this.socket.on('disconnect', (playerId) => {
+    self.otherPlayers.getChildren().forEach((otherPlayer) => {
+      if (playerId === otherPlayer.id) {
+        otherPlayer.destroy();
+      }
+    });
   });
 
   this.cursors = this.input.keyboard.createCursorKeys();
@@ -61,13 +90,26 @@ function addScenario(self) {
   self.platforms.create(750, 220, 'ground');
 }
 
-function addPlayer(self, playerInfo) {
-  self.player = self.physics.add.sprite(playerInfo.x, playerInfo.y, 'dude');
+function addPlayer(self, player) {
+  self.player = self.physics.add.sprite(player.x, player.y, 'dude');
 
   self.player.setBounce(0.2);
   self.player.setCollideWorldBounds(true);
 
   self.physics.add.collider(self.player, self.platforms);
+}
+
+function addOtherPlayer(self, player) {
+  const otherPlayer = self.physics.add.sprite(player.x, player.y, 'dude');
+  otherPlayer.setBounce(0.2);
+  otherPlayer.setCollideWorldBounds(true);
+  otherPlayer.setTint(0x00ff99);
+  otherPlayer.id = player.id;
+  otherPlayer.anims.play(player.animation, true);
+
+  self.physics.add.collider(otherPlayer, self.platforms);
+
+  self.otherPlayers.add(otherPlayer);
 }
 
 function addPlayersAnimation(self) {

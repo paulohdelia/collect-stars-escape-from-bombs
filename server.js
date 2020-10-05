@@ -10,7 +10,7 @@ io.on('connection', (socket) => {
   console.log(`> Player connected: ${socket.id}`);
 
   players[socket.id] = {
-    score: 0,
+    id: socket.id,
     x: Math.round(Math.random() * 700) + 50,
     y: 450,
     animation: 'turn',
@@ -18,10 +18,14 @@ io.on('connection', (socket) => {
 
   socket.emit('currentPlayers', players);
 
+  socket.broadcast.emit('newPlayer', players[socket.id]);
+
   socket.on('playerMovement', ({ x, y, animation }) => {
     players[socket.id].x = x;
     players[socket.id].y = y;
     players[socket.id].animation = animation;
+
+    socket.broadcast.emit('playerMoved', players[socket.id]);
   });
 
   socket.on('disconnect', () => {
