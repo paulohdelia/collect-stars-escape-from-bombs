@@ -36,6 +36,7 @@ function create() {
   this.socket = io();
   this.otherPlayers = this.physics.add.group();
   this.bombs = this.physics.add.group();
+  this.canEmitStarCollected = true;
 
   addScenario(this);
   addPlayersAnimation(this);
@@ -176,7 +177,11 @@ function addStar(self, starInfo) {
     self.player,
     self.star,
     () => {
-      self.socket.emit('starCollected', { points: self.star.points });
+      if (self.canEmitStarCollected) {
+        self.socket.emit('starCollected', { points: self.star.points });
+        self.canEmitStarCollected = false;
+        setTimeout(() => (self.canEmitStarCollected = true), 800);
+      }
     },
     null,
     self
