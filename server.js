@@ -134,7 +134,7 @@ io.on('connection', (socket) => {
     io.emit('scoreUpdate', scores);
   });
 
-  socket.on('starCollected', ({ points }) => {
+  socket.on('starCollected', () => {
     bombCont++;
 
     bombs[bombCont] = {
@@ -147,9 +147,9 @@ io.on('connection', (socket) => {
       },
     };
 
-    star.newStar();
+    scores[socket.id].points += star.points;
 
-    scores[socket.id].points += points;
+    star.newStar();
 
     io.emit('newBomb', bombs[bombCont]);
     io.emit('starLocation', star);

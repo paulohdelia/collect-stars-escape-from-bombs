@@ -206,7 +206,7 @@ function addStar(self, starInfo) {
     self.star,
     () => {
       if (self.canEmitStarCollected) {
-        self.socket.emit('starCollected', { points: self.star.points });
+        self.socket.emit('starCollected');
         self.canEmitStarCollected = false;
         setTimeout(() => (self.canEmitStarCollected = true), 800);
       }
@@ -237,7 +237,7 @@ function addBomb(self, bombInfo) {
 function handleKeyboardInput(self) {
   if (self.player) {
     if (self.cursors.down.isDown && !self.player.body.touching.down) {
-      self.player.setVelocityY(300);
+      self.player.setVelocityY(2000);
       self.player.setVelocityX(0);
       self.player.anims.play('turn');
     } else {
