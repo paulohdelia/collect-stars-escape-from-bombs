@@ -5,7 +5,8 @@
   "author": "paulohdelia <paulohdelia@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "start": "nodemon server.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
   "devDependencies": {
     "nodemon": "^2.0.4"
