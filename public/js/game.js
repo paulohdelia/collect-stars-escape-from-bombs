@@ -35,6 +35,7 @@ function create() {
 
   this.socket = io();
   this.otherPlayers = this.physics.add.group();
+  this.bombs = this.physics.add.group();
 
   addScenario(this);
   addPlayersAnimation(this);
@@ -51,8 +52,20 @@ function create() {
     }
   });
 
+  this.socket.on('currentBombs', (currentBombs) => {
+    for (const bombId in currentBombs) {
+      const bomb = currentBombs[bombId];
+
+      addBomb(self, bomb);
+    }
+  });
+
   this.socket.on('newPlayer', (player) => {
     addOtherPlayer(self, player);
+  });
+
+  this.socket.on('newBomb', (bomb) => {
+    addBomb(self, bomb);
   });
 
   this.socket.on('playerMoved', (player) => {
@@ -70,6 +83,14 @@ function create() {
 
   this.socket.on('scoreUpdate', (scores) => {
     updateScore(self, scores);
+  });
+
+  this.socket.on('destroyBomb', (bombId) => {
+    self.bombs.getChildren().forEach((bomb) => {
+      if (bombId === bomb.id) {
+        bomb.destroy();
+      }
+    });
   });
 
   this.socket.on('disconnect', (playerId) => {
@@ -143,12 +164,14 @@ function addPlayersAnimation(self) {
   });
 }
 
-function addStar(self, star) {
+function addStar(self, starInfo) {
+  const { x, y, points, color } = starInfo;
+
   if (self.star) self.star.destroy();
 
-  self.star = self.physics.add.image(star.x, star.y, 'star');
-  self.star.points = star.points;
-  self.star.setTint(star.color);
+  self.star = self.physics.add.image(x, y, 'star');
+  self.star.points = points;
+  self.star.setTint(color);
   self.physics.add.overlap(
     self.player,
     self.star,
@@ -159,6 +182,23 @@ function addStar(self, star) {
     self
   );
   self.physics.add.collider(self.star, self.platforms);
+}
+
+function addBomb(self, bombInfo) {
+  const { x, y, velocity, id } = bombInfo;
+
+  const bomb = self.bombs.create(x, y, 'bomb');
+  bomb.setBounce(1);
+  bomb.setCollideWorldBounds(true);
+  bomb.setVelocity(velocity.x, velocity.y);
+  bomb.allowGravity = false;
+  bomb.id = id;
+
+  self.physics.add.collider(bomb, self.platforms);
+  self.physics.add.collider(bomb, self.player, () => {
+    bomb.destroy();
+    self.socket.emit('playerHitted', bombInfo);
+  });
 }
 
 function handleKeyboardInput(self) {
