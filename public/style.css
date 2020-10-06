@@ -3,6 +3,7 @@
   padding: 0;
   box-sizing: border-box;
   font-family: sans-serif;
+  background-color: #333;
 }
 
 #main-wrapper {
@@ -14,11 +15,21 @@
 
 canvas {
   margin-left: auto;
+  border: 4px solid #ffff00;
+  border-radius: 8px;
+}
+
+.col {
+  margin-right: auto;
+  margin-left: auto;
+
+  display: flex;
+  flex-direction: column;
 }
 
 .scoreboard {
-  margin-right: auto;
-  margin-left: 48px;
+  border-radius: 8px;
+  border: 1px solid #00ffff;
 }
 
 .scoreboard,
@@ -35,4 +46,16 @@ th {
 
 .currentPlayer {
   color: #00ffff;
+}
+
+.button {
+  margin-top: 32px;
+  background-color: #111;
+  color: #e0234e;
+  padding: 1em 2em;
+  font-size: 18px;
+  letter-spacing: 6px;
+  border-radius: 8px;
+  border: 1px solid #00ffff;
+  cursor: pointer;
 }

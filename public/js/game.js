@@ -33,13 +33,24 @@ function preload() {
 function create() {
   const self = this;
 
+  const startButton = document.querySelector('.start');
+  const endButton = document.querySelector('.end');
+
+  startButton.addEventListener('click', () => startGame(self));
+  endButton.addEventListener('click', () => endGame(self));
+
   this.socket = io();
   this.otherPlayers = this.physics.add.group();
   this.bombs = this.physics.add.group();
   this.canEmitStarCollected = true;
+  this.pause = true;
 
   addScenario(this);
   addPlayersAnimation(this);
+
+  this.socket.on('gameStatus', (isRunning) => {
+    self.pause = !isRunning;
+  });
 
   this.socket.on('currentPlayers', (currentPlayers) => {
     for (const playerId in currentPlayers) {
@@ -94,6 +105,20 @@ function create() {
     });
   });
 
+  this.socket.on('destroyAllBombs', () => {
+    self.bombs.clear(true);
+  });
+
+  this.socket.on('respawnPlayers', () => {
+    self.otherPlayers.getChildren().forEach((otherPlayer) => {
+      otherPlayer.setPosition(otherPlayer.x, 450);
+      otherPlayer.anims.play('turn', true);
+    });
+
+    self.player.setPosition(self.player.x, 450);
+    self.player.anims.play('turn', true);
+  });
+
   this.socket.on('disconnect', (playerId) => {
     self.otherPlayers.getChildren().forEach((otherPlayer) => {
       if (playerId === otherPlayer.id) {
@@ -106,6 +131,9 @@ function create() {
 }
 
 function update() {
+  if (this.pause) {
+    return;
+  }
   handleKeyboardInput(this);
 }
 
@@ -276,4 +304,12 @@ function updateScore(self, scores) {
 
     table.appendChild(row);
   }
+}
+
+function startGame(self) {
+  self.socket.emit('startGame');
+}
+
+function endGame(self) {
+  self.socket.emit('endGame');
 }

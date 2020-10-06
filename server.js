@@ -40,7 +40,9 @@ const star = {
 };
 
 let bombCont = -1;
-const bombs = {};
+let bombs = {};
+
+let isRunning = false;
 
 io.on('connection', (socket) => {
   console.log(`> Player connected: ${socket.id}`);
@@ -57,6 +59,8 @@ io.on('connection', (socket) => {
     points: 0,
   };
 
+  socket.emit('gameStatus', isRunning);
+
   socket.emit('currentPlayers', players);
 
   socket.emit('starLocation', star);
@@ -66,6 +70,50 @@ io.on('connection', (socket) => {
   socket.broadcast.emit('newPlayer', players[socket.id]);
 
   io.emit('scoreUpdate', scores);
+
+  socket.on('startGame', () => {
+    if (!isRunning) {
+      console.log('> Starting game');
+      isRunning = true;
+      io.emit('gameStatus', isRunning);
+    }
+  });
+
+  socket.on('endGame', () => {
+    if (isRunning) {
+      console.log('> Stopping game');
+
+      isRunning = false;
+
+      io.emit('gameStatus', isRunning);
+
+      for (const playerId in scores) {
+        const player = scores[playerId];
+
+        player.points = 0;
+      }
+
+      for (const playerId in players) {
+        const player = players[playerId];
+
+        player.y = 450;
+        animation = 'turn';
+      }
+
+      star.newStar();
+      bombs = {};
+      bombCont = -1;
+
+      io.emit('gameStatus', isRunning);
+      io.emit('starLocation', star);
+      io.emit('scoreUpdate', scores);
+      io.emit('destroyAllBombs', bombs);
+
+      setTimeout(() => {
+        io.emit('respawnPlayers');
+      }, 3000);
+    }
+  });
 
   socket.on('playerMovement', ({ x, y, animation }) => {
     players[socket.id].x = x;

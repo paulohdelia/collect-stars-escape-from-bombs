@@ -9,18 +9,24 @@
   <body>
     <script src="/socket.io/socket.io.js"></script>
     <script src="//cdn.jsdelivr.net/npm/phaser@3.24.1/dist/phaser.min.js"></script>
-    <script src="js/game.js"></script>
 
     <main id="main-wrapper">
-      <table class="scoreboard">
-        <thead>
-          <tr>
-            <th>SCORE</th>
-            <th>NAME</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <div class="col">
+        <table class="scoreboard">
+          <thead>
+            <tr>
+              <th>SCORE</th>
+              <th>NAME</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+
+        <button class="button start">INICIAR</button>
+        <button class="button end">NOVO JOGO</button>
+      </div>
     </main>
+
+    <script src="js/game.js"></script>
   </body>
 </html>
